@@ -10,8 +10,8 @@ st.title("授業設計サポートアプリ")
 # ========= Google Sheets の設定 =========
 
 # 教員メモを保存するスプレッドシートIDとシート名
-MEMO_SPREADSHEET_ID = "あなたのメモ用スプレッドシートID"
-MEMO_SHEET_NAME = "シート1"  # 実際のシート名に変更
+MEMO_SPREADSHEET_ID = "1y3RhipP1vlK1esFUeAypQnyQ7JWH58yau7Sv4gH0Wjo"
+MEMO_SHEET_NAME = "シート1"  # 実際のシート名に合わせて変更
 
 # サービスアカウント情報を Streamlit Secrets から取得
 def get_gspread_client():
@@ -37,12 +37,14 @@ def load_data():
 
 official_df, memo_df = load_data()
 
-# ========= 見た目用の関数 =========
+# ========= 表示整形（箇条書きなし・一文ごとに改行） =========
 
-def format_bullets(text):
+def format_lines(text):
     lines = str(text).split("\n")
-    bullets = [f"・{line}" for line in lines if line.strip() != ""]
-    return "<br>".join(bullets)
+    clean = [line.strip() for line in lines if line.strip() != ""]
+    return "<br>".join(clean)
+
+# ========= カード表示 =========
 
 def card(title, content):
     st.markdown(
@@ -106,8 +108,7 @@ selected = filtered_grade[
 ].iloc[0]
 
 memo_match = memo_df[
-    (memo_df["小単元"] == subunit) &
-    (memo_df["本時の学習内容"] == lesson)
+    memo_df["本時の学習内容"] == lesson
 ]
 
 # ========= タブ =========
@@ -118,45 +119,46 @@ tab1, tab2 = st.tabs(["📘 公式データ", "📝 教員メモ"])
 with tab1:
     st.subheader("📘 学習指導要領（公式）")
 
-    card("ねらい（最終到達目標）", format_bullets(selected["ねらい(最終到達目標)"]))
-    card("既習内容", format_bullets(selected["既習内容"]))
-    card("本時の学習内容", format_bullets(selected["本時の学習内容"]))
-    card("目的", format_bullets(selected["目的"]))
-    card("知識・技能", format_bullets(selected["知識・技能"]))
-    card("思考力・表現力・判断力", format_bullets(selected["思考力・表現力・判断力"]))
-    card("学びに向かう人間性等", format_bullets(selected["学びに向かう人間性等"]))
-    card("次回の学習内容", format_bullets(selected["次回の学習内容"]))
+    card("ねらい（最終到達目標）", format_lines(selected["ねらい(最終到達目標)"]))
+    card("既習内容", format_lines(selected["既習内容"]))
+    card("本時の学習内容", format_lines(selected["本時の学習内容"]))
+    card("目的", format_lines(selected["目的"]))
+
+    card("到達目標（知識・技能）", format_lines(selected["到達目標＜知識・技能＞"]))
+    card("到達目標（思考力・表現力・判断力）", format_lines(selected["到達目標＜思考力・表現力・判断力＞"]))
+    card("到達目標（学びに向かう人間性等）", format_lines(selected["到達目標＜学びに向かう人間性等＞"]))
+
+    card("次回の学習内容", format_lines(selected["次回の学習内容"]))
 
 # ----- タブ2：教員メモ -----
 with tab2:
     st.subheader("📝 教員メモ（既存データの閲覧）")
 
     if len(memo_match) == 0:
-        st.info("この小単元・本時に対応する教員メモは、まだ登録されていません。")
+        st.info("この本時に対応する教員メモは、まだ登録されていません。")
     else:
         memo_row = memo_match.iloc[0]
-        card("評価基準", format_bullets(
-            memo_row["評価基準(知識・技能、思考力・表現力・判断力、学びに向かう人間性等)"]
-        ))
-        card("生徒のつまづき", format_bullets(memo_row["生徒のつまづき"]))
-        card("指導上の工夫・手立て", format_bullets(memo_row["指導上の工夫・手立て"]))
-        card("使用した教材・ICTツール等", format_bullets(memo_row["使用した教材・ICTツール等"]))
-        card("次時への引継ぎ事項", format_bullets(memo_row["次時への引継ぎ事項"]))
-        card("メモ", format_bullets(memo_row["メモ"]))
+        card("評価基準（知識・技能）", format_lines(memo_row["評価基準＜知識・技能＞"]))
+        card("評価基準（思考力・表現力・判断力）", format_lines(memo_row["評価基準＜思考力・表現力・判断力＞"]))
+        card("評価基準（学びに向かう人間性等）", format_lines(memo_row["評価基準＜学びに向かう人間性等＞"]))
+        card("生徒のつまづき", format_lines(memo_row["生徒のつまづき"]))
+        card("指導上の工夫・手立て", format_lines(memo_row["指導上の工夫・手立て"]))
+        card("使用した教材・ICTツール等", format_lines(memo_row["使用した教材・ICTツール等"]))
+        card("次時への引継ぎ事項", format_lines(memo_row["次時への引継ぎ事項"]))
+        card("メモ", format_lines(memo_row["メモ"]))
 
     st.markdown("---")
     st.subheader("✏️ 教員が新しくメモを書く欄（Google Sheets に保存）")
 
     with st.form("teacher_memo_form"):
-        col_a, col_b = st.columns(2)
-        with col_a:
-            new_eval = st.text_area("評価基準", height=80)
-            new_stumble = st.text_area("生徒のつまづき", height=80)
-            new_idea = st.text_area("指導上の工夫・手立て", height=80)
-        with col_b:
-            new_tools = st.text_area("使用した教材・ICTツール等", height=80)
-            new_next = st.text_area("次時への引継ぎ事項", height=80)
-            new_memo = st.text_area("自由記述メモ", height=80)
+        new_eval_k = st.text_area("評価基準（知識・技能）")
+        new_eval_t = st.text_area("評価基準（思考力・表現力・判断力）")
+        new_eval_h = st.text_area("評価基準（学びに向かう人間性等）")
+        new_stumble = st.text_area("生徒のつまづき")
+        new_idea = st.text_area("指導上の工夫・手立て")
+        new_tools = st.text_area("使用した教材・ICTツール等")
+        new_next = st.text_area("次時への引継ぎ事項")
+        new_memo = st.text_area("メモ")
 
         submitted = st.form_submit_button("Google Sheets に保存する")
 
@@ -169,9 +171,10 @@ with tab2:
             now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             new_row = [
-                subunit,
                 lesson,
-                new_eval,
+                new_eval_k,
+                new_eval_t,
+                new_eval_h,
                 new_stumble,
                 new_idea,
                 new_tools,
@@ -186,5 +189,3 @@ with tab2:
         except Exception as e:
             st.error("保存中にエラーが発生しました。Secrets や シート名を確認してください。")
             st.write(e)
-
-
