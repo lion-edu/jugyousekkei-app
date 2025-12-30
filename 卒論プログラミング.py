@@ -122,9 +122,9 @@ with tab1:
     card("既習内容", format_bullets(selected["既習内容"]))
     card("本時の学習内容", format_bullets(selected["本時の学習内容"]))
     card("目的", format_bullets(selected["目的"]))
-    card("到達目標", format_bullets(
-        selected["到達目標(知識・技能、思考力・表現力・判断力、学びに向かう人間性等)"]
-    ))
+    card("知識・技能", format_bullets(selected["知識・技能"]))
+    card("思考力・表現力・判断力", format_bullets(selected["思考力・表現力・判断力"]))
+    card("学びに向かう人間性等", format_bullets(selected["学びに向かう人間性等"]))
     card("次回の学習内容", format_bullets(selected["次回の学習内容"]))
 
 # ----- タブ2：教員メモ -----
@@ -186,4 +186,5 @@ with tab2:
         except Exception as e:
             st.error("保存中にエラーが発生しました。Secrets や シート名を確認してください。")
             st.write(e)
-            
+
+
